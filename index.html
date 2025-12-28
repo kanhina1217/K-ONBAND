@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>バンド変えアプリ | K-ON BAND</title>
+    <meta name="description" content="バンドメンバーの編成を補助するWebアプリケーション">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- ヘッダー -->
+        <header class="app-header">
+            <h1>🎸 バンド変えアプリ</h1>
+            <div class="header-actions">
+                <button id="exportBtn" class="btn btn-secondary">📤 エクスポート</button>
+                <button id="importBtn" class="btn btn-secondary">📥 インポート</button>
+                <button id="themeToggleBtn" class="btn btn-secondary" title="テーマ切り替え">☀️</button>
+                <button id="resetAllBtn" class="btn btn-danger" style="background-color: var(--danger);">🗑️
+                    全削除</button>
+                <input type="file" id="importFile" accept=".json" hidden>
+            </div>
+        </header>
+
+        <!-- メインコンテンツ -->
+        <main class="main-content">
+            <!-- メンバー管理セクション（上部） -->
+            <section class="section members-section">
+                <div class="section-header">
+                    <h2>👥 メンバー管理</h2>
+                    <button id="addMemberBtn" class="btn btn-primary">+ メンバー追加</button>
+                </div>
+
+                <!-- スプレッドシートインポート -->
+                <div class="spreadsheet-import">
+                    <div class="import-header">
+                        <span>📋 スプレッドシートから一括登録</span>
+                        <button id="toggleImportHelp" class="btn-icon">❓</button>
+                    </div>
+                    <div id="importHelp" class="import-help hidden">
+                        <p>以下の形式でコピペしてください（タブ区切り）:</p>
+                        <code>名前  Vo  BaGt  LeGt  Ba  Dr  Key  メイン</code>
+                        <p>例: <code>田中  3  -  -  -  5  -  Dr</code></p>
+                        <p>※ 実力は1-5、できない場合は「-」または空欄</p>
+                    </div>
+                    <textarea id="spreadsheetInput" placeholder="スプレッドシートからコピーした内容をここに貼り付け..."></textarea>
+                    <button id="parseSpreadsheet" class="btn btn-accent">一括登録</button>
+                </div>
+            </section>
+
+            <!-- バンド編成エリア（2カラム） -->
+            <div class="band-editor-container">
+                <!-- 左側: バンド編成 -->
+                <div class="band-editor-left">
+                    <section class="section bands-section">
+                        <div class="section-header">
+                            <h2>🎵 バンド編成</h2>
+                            <div class="band-controls">
+                                <label>バンド数:</label>
+                                <button id="decreaseBands" class="btn-icon">−</button>
+                                <span id="bandCount">3</span>
+                                <button id="increaseBands" class="btn-icon">+</button>
+                                <button id="settingsBtn" class="btn btn-secondary" style="margin-left: 15px;">⚙️
+                                    設定</button>
+                            </div>
+                        </div>
+
+                        <div id="bandsContainer" class="bands-grid">
+                            <!-- バンドカードがここに追加される -->
+                        </div>
+                    </section>
+
+                    <!-- 現在のバンド（被り確認用） -->
+                    <section class="section current-bands-section">
+                        <div class="section-header">
+                            <h2>📌 現在のバンド（被り確認用）</h2>
+                            <button id="addCurrentBandBtn" class="btn btn-secondary">+ 現在のバンドを追加</button>
+                        </div>
+                        <div id="currentBandsContainer" class="bands-grid">
+                            <!-- 現在のバンドがここに追加される -->
+                        </div>
+                    </section>
+                </div>
+
+                <!-- 右側: メンバープール（ドラッグ元） -->
+                <div class="band-editor-right">
+                    <section class="section member-pool-section">
+                        <div class="section-header">
+                            <h2>🎤 メンバープール</h2>
+                            <div class="filter-tabs">
+                                <button class="filter-tab active" data-filter="all">全員</button>
+                                <button class="filter-tab" data-filter="Vo">Vo</button>
+                                <button class="filter-tab" data-filter="BaGt">BaGt</button>
+                                <button class="filter-tab" data-filter="LeGt">LeGt</button>
+                                <button class="filter-tab" data-filter="Ba">Ba</button>
+                                <button class="filter-tab" data-filter="Dr">Dr</button>
+                                <button class="filter-tab" data-filter="Key">Key</button>
+                            </div>
+                        </div>
+                        <div id="memberPool" class="member-pool">
+                            <!-- ドラッグ可能なメンバーがここに追加される -->
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- メンバー編集モーダル -->
+    <div id="memberModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">メンバー追加</h3>
+                <button id="closeModal" class="btn-icon">✕</button>
+            </div>
+            <form id="memberForm">
+
+                <div class="form-group">
+                    <label for="memberName">名前</label>
+                    <input type="text" id="memberName" required>
+                </div>
+
+                <div class="form-group">
+                    <label>各パートの実力（1-5、できない場合は空欄）</label>
+                    <div class="skills-grid">
+                        <div class="skill-item">
+                            <label>Vo</label>
+                            <input type="number" id="skillVo" min="1" max="5">
+                        </div>
+                        <div class="skill-item">
+                            <label>BaGt</label>
+                            <input type="number" id="skillBaGt" min="1" max="5">
+                        </div>
+                        <div class="skill-item">
+                            <label>LeGt</label>
+                            <input type="number" id="skillLeGt" min="1" max="5">
+                        </div>
+                        <div class="skill-item">
+                            <label>Ba</label>
+                            <input type="number" id="skillBa" min="1" max="5">
+                        </div>
+                        <div class="skill-item">
+                            <label>Dr</label>
+                            <input type="number" id="skillDr" min="1" max="5">
+                        </div>
+                        <div class="skill-item">
+                            <label>Key</label>
+                            <input type="number" id="skillKey" min="1" max="5">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="mainPart">メインパート</label>
+                    <select id="mainPart">
+                        <option value="">選択してください</option>
+                        <option value="Vo">ボーカル (Vo)</option>
+                        <option value="BaGt">バッキングギター (BaGt)</option>
+                        <option value="LeGt">リードギター (LeGt)</option>
+                        <option value="Ba">ベース (Ba)</option>
+                        <option value="Dr">ドラム (Dr)</option>
+                        <option value="Key">キーボード (Key)</option>
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-danger" id="deleteMember" style="display: none;">削除</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 設定モーダル -->
+    <div id="settingsModal" class="modal hidden">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>⚙️ アプリ設定</h3>
+                <button id="closeSettingsModal" class="btn-icon">✕</button>
+            </div>
+            <div class="settings-form">
+                <div class="control-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="settingAllowConcurrent" checked>
+                        兼任（マルチパート）を許可する
+                    </label>
+                </div>
+                <div class="control-group">
+                    <label for="settingMinLevel">兼任に必要なスキルレベル:</label>
+                    <select id="settingMinLevel">
+                        <option value="1">Lv1以上</option>
+                        <option value="2">Lv2以上</option>
+                        <option value="3">Lv3以上</option>
+                        <option value="4">Lv4以上</option>
+                        <option value="5" selected>Lv5のみ</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="settingMaxAssignments">兼任できる最大数（所属数）:</label>
+                    <input type="number" id="settingMaxAssignments" min="2" max="10" value="2">
+                </div>
+                <div class="form-actions" style="margin-top: 20px;">
+                    <button id="saveSettingsBtn" class="btn btn-primary">設定を保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>
