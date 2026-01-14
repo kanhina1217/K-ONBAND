@@ -61,6 +61,8 @@ const Storage = {
             bands: this.loadBands(),
             currentBands: this.loadCurrentBands(),
             bandCount: this.loadBandCount(),
+            settings: JSON.parse(localStorage.getItem('konband_settings') || '{}'),
+            theme: localStorage.getItem('konband_theme') || 'dark',
             exportedAt: new Date().toISOString()
         };
 
@@ -80,17 +82,29 @@ const Storage = {
         try {
             const data = JSON.parse(jsonData);
 
+            // インポート時は全データを一度クリアするのが安全（不整合防止）
+            // this.clearAll(); // ただし、テーマなどは残したいかもしれないので個別上書きにする
+
             if (data.members) {
                 this.saveMembers(data.members);
             }
             if (data.bands) {
                 this.saveBands(data.bands);
+                if (!data.bandCount) {
+                    this.saveBandCount(data.bands.length);
+                }
             }
             if (data.currentBands) {
                 this.saveCurrentBands(data.currentBands);
             }
             if (data.bandCount) {
                 this.saveBandCount(data.bandCount);
+            }
+            if (data.settings) {
+                localStorage.setItem('konband_settings', JSON.stringify(data.settings));
+            }
+            if (data.theme) {
+                localStorage.setItem('konband_theme', data.theme);
             }
 
             return true;

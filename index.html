@@ -201,8 +201,13 @@
                     </select>
                 </div>
                 <div class="control-group">
-                    <label for="settingMaxAssignments">兼任できる最大数（所属数）:</label>
-                    <input type="number" id="settingMaxAssignments" min="2" max="10" value="2">
+                    <label for="settingMaxAssignments">兼任可能なバンド上限数:</label>
+                    <input type="number" id="settingMaxAssignments" min="2" max="5" value="2">
+                </div>
+                <div class="control-group">
+                    <label for="settingMinCollisionThreshold">共演アイコン(🤝)を表示する人数:</label>
+                    <input type="number" id="settingMinCollisionThreshold" min="2" max="6" value="3">
+                    <span class="help-text">同じ過去バンドだった人がn人以上揃った時に表示</span>
                 </div>
                 <div class="form-actions" style="margin-top: 20px;">
                     <button id="saveSettingsBtn" class="btn btn-primary">設定を保存</button>

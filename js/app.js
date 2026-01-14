@@ -23,11 +23,10 @@ let state = {
     editingMemberId: null,
     currentFilter: 'all',
     draggedMemberId: null,
-    currentFilter: 'all',
-    draggedMemberId: null,
     allowConcurrent: true, // 兼任許可フラグ
     concurrentMinLevel: 5, // 兼任に必要な最小レベル
-    maxAssignments: 2 // 兼任上限
+    maxAssignments: 2, // 兼任上限
+    minCollisionThreshold: 3 // 過去の共演表示の閾値 (3人以上)
 };
 
 // 初期化
@@ -51,6 +50,38 @@ function loadState() {
     state.bands = Storage.loadBands();
     state.currentBands = Storage.loadCurrentBands();
     state.bandCount = Storage.loadBandCount();
+
+    // 設定の読み込み
+    const savedSettings = localStorage.getItem('konband_settings');
+    if (savedSettings) {
+        try {
+            const parsed = JSON.parse(savedSettings);
+            state.allowConcurrent = parsed.allowConcurrent ?? true;
+            state.concurrentMinLevel = parsed.concurrentMinLevel ?? 5;
+            state.maxAssignments = parsed.maxAssignments ?? 2;
+            state.minCollisionThreshold = parsed.minCollisionThreshold ?? 3;
+        } catch (e) {
+            console.error('Settings parse error', e);
+        }
+    } else {
+        // 旧設定からの移行用（互換性）
+        const oldMax = localStorage.getItem('konband_maxAssignments');
+        if (oldMax) state.maxAssignments = parseInt(oldMax);
+    }
+
+    // 以前のデータとの互換性：色や絵文字がない場合に割り当てる
+    let changed = false;
+    state.currentBands.forEach((band, index) => {
+        if (!band.color) {
+            band.color = COLOR_PALETTE[index % COLOR_PALETTE.length];
+            changed = true;
+        }
+        if (!band.emoji) {
+            band.emoji = EMOJI_PALETTE[index % EMOJI_PALETTE.length];
+            changed = true;
+        }
+    });
+    if (changed) saveState();
 
     // バンド数に合わせてバンドを初期化
     ensureBandsExist();
@@ -142,27 +173,11 @@ function setupEventListeners() {
     const saveSettings = document.getElementById('saveSettingsBtn');
 
     if (settingsBtn && settingsModal) {
-        // 設定値の読み込み (localStorage)
-        const savedSettings = localStorage.getItem('konband_settings');
-        if (savedSettings) {
-            try {
-                const parsed = JSON.parse(savedSettings);
-                state.allowConcurrent = parsed.allowConcurrent ?? true;
-                state.concurrentMinLevel = parsed.concurrentMinLevel ?? 5;
-                state.maxAssignments = parsed.maxAssignments ?? 2;
-            } catch (e) {
-                console.error('Settings parse error', e);
-            }
-        } else {
-            // 旧設定からの移行
-            const oldMax = localStorage.getItem('konband_maxAssignments');
-            if (oldMax) state.maxAssignments = parseInt(oldMax);
-        }
-
         settingsBtn.addEventListener('click', () => {
             document.getElementById('settingAllowConcurrent').checked = state.allowConcurrent;
             document.getElementById('settingMinLevel').value = state.concurrentMinLevel;
             document.getElementById('settingMaxAssignments').value = state.maxAssignments;
+            document.getElementById('settingMinCollisionThreshold').value = state.minCollisionThreshold;
             settingsModal.classList.remove('hidden');
         });
 
@@ -178,10 +193,15 @@ function setupEventListeners() {
             if (max > 10) max = 10;
             state.maxAssignments = max;
 
+            let threshold = parseInt(document.getElementById('settingMinCollisionThreshold').value);
+            if (threshold < 2) threshold = 2;
+            state.minCollisionThreshold = threshold;
+
             localStorage.setItem('konband_settings', JSON.stringify({
                 allowConcurrent: state.allowConcurrent,
                 concurrentMinLevel: state.concurrentMinLevel,
-                maxAssignments: state.maxAssignments
+                maxAssignments: state.maxAssignments,
+                minCollisionThreshold: state.minCollisionThreshold
             }));
 
             settingsModal.classList.add('hidden');
@@ -297,15 +317,34 @@ function changeBandCount(delta) {
     }
 }
 
+// カラーパレットと絵文字パレット
+const COLOR_PALETTE = ['#ff7675', '#74b9ff', '#55efc4', '#ffeaa7', '#a29bfe', '#fab1a0', '#fd79a8', '#fdcb6e', '#00cec9', '#d63031'];
+const EMOJI_PALETTE = ['🎸', '🎹', '🥁', '🎤', '🎷', '🎺', '🎻', '🎨', '🚀', '🌟', '🍀', '🔥', '💧', '🌈'];
+
 // 現在のバンドを追加
 function addCurrentBand() {
+    const randomColor = COLOR_PALETTE[Math.floor(Math.random() * COLOR_PALETTE.length)];
+    const randomEmoji = EMOJI_PALETTE[Math.floor(Math.random() * EMOJI_PALETTE.length)];
+
     state.currentBands.push({
         id: generateId(),
         name: `現バンド${state.currentBands.length + 1}`,
+        color: randomColor,
+        emoji: randomEmoji,
         slots: PARTS.reduce((acc, part) => ({ ...acc, [part]: null }), {})
     });
     saveState();
     render();
+}
+
+// 現在のバンドの色/絵文字変更
+function handleCurrentBandColorEmojiChange(bandId, field, value) {
+    const band = state.currentBands.find(b => b.id === bandId);
+    if (band) {
+        band[field] = value;
+        saveState();
+        render(); // 再描画して反映
+    }
 }
 
 // 現在のバンドを削除
@@ -518,7 +557,7 @@ function saveState() {
 
 // 重複と過去バンド被りを検出
 function analyzeBands() {
-    const memberNewBands = {}; // memberId -> [{ bandId, part }] (新バンドのみ)
+    const memberNewBands = {}; // memberId -> [{ bandId, color, emoji, part }] (新バンドのみ)
 
     // 新しいバンド内での重複チェック
     state.bands.forEach((band) => {
@@ -527,46 +566,70 @@ function analyzeBands() {
                 if (!memberNewBands[memberId]) {
                     memberNewBands[memberId] = [];
                 }
-                memberNewBands[memberId].push({ bandId: band.id, part: part });
+                memberNewBands[memberId].push({
+                    bandId: band.id,
+                    color: band.color,
+                    emoji: band.emoji,
+                    part: part
+                });
             }
         });
     });
 
     // 重複判定
-    const duplicates = {};
+    const duplicates = {}; // memberId -> [ { otherBandInfo } ]
     Object.entries(memberNewBands).forEach(([memberId, entries]) => {
         if (entries.length > 1) {
-            if (state.allowConcurrent) {
-                // 兼任許可されている場合
-                // 兼任している全てのパートが指定レベル以上かチェック
-                const member = state.members.find(m => m.id === memberId);
-                const meetsLevel = entries.every(e => (member.skills[e.part] || 0) >= state.concurrentMinLevel);
-                const isWithinLimit = entries.length <= state.maxAssignments;
+            const member = state.members.find(m => m.id === memberId);
+            if (!member) return;
 
-                if (!meetsLevel) {
-                    duplicates[memberId] = `兼任スキル不足 (Lv${state.concurrentMinLevel}必要)`;
-                } else if (!isWithinLimit) {
-                    duplicates[memberId] = `兼任上限オーバー (最大${state.maxAssignments}つ)`;
+            // 各エントリー（アサイン箇所）から見て、自分以外の箇所を「重複相手」として抽出
+            entries.forEach((entry, idx) => {
+                const others = entries.filter((_, i) => i !== idx);
+
+                // エラーチェック（兼任制約など）
+                let errorMsg = '';
+                if (state.allowConcurrent) {
+                    const meetsLevel = (member.skills[entry.part] || 0) >= state.concurrentMinLevel;
+                    const isWithinLimit = entries.length <= state.maxAssignments;
+                    if (!meetsLevel) errorMsg = `兼任スキル不足 (Lv${state.concurrentMinLevel}必要)`;
+                    else if (!isWithinLimit) errorMsg = `兼任上限オーバー (最大${state.maxAssignments}つ)`;
+                } else {
+                    errorMsg = '重複';
                 }
-            } else {
-                // 兼任不許可なら即座に重複エラー
-                // どのバンドと重複しているか情報を入れたいところだが、シンプルに
-                duplicates[memberId] = '他バンドと重複しています（兼任設定OFF）';
-            }
+
+                // エラーがある場合のみ duplicates に記録する (兼任許可が効くようにする)
+                if (errorMsg) {
+                    if (!duplicates[memberId]) duplicates[memberId] = [];
+                    others.forEach(other => {
+                        duplicates[memberId].push({
+                            atPart: entry.part,
+                            otherBandId: other.bandId,
+                            color: other.color,
+                            emoji: other.emoji,
+                            error: errorMsg
+                        });
+                    });
+                }
+            });
         }
     });
 
     // 過去バンド（currentBands）での共演チェック
-    // bandId -> [ { members: [id, id...], sourceName: 'Band A' } ]
-    const collisions = {};
+    const collisions = {}; // bandId -> [ { id, name, color, emoji, members } ]
 
     // 1. 各メンバーが所属していた過去バンドのマップを作成
-    const memberPastBands = {}; // memberId -> [ { id, name } ]
+    const memberPastBands = {}; // memberId -> [ { id, name, color, emoji } ]
     state.currentBands.forEach(cBand => {
         Object.values(cBand.slots).forEach(mId => {
             if (mId) {
                 if (!memberPastBands[mId]) memberPastBands[mId] = [];
-                memberPastBands[mId].push({ id: cBand.id, name: cBand.name });
+                memberPastBands[mId].push({
+                    id: cBand.id,
+                    name: cBand.name,
+                    color: cBand.color,
+                    emoji: cBand.emoji
+                });
             }
         });
     });
@@ -574,31 +637,32 @@ function analyzeBands() {
     // 2. 各新バンドについてチェック
     state.bands.forEach(nBand => {
         const membersInBand = Object.values(nBand.slots).filter(id => id);
-        if (membersInBand.length < 2) return;
+        if (membersInBand.length < state.minCollisionThreshold) return;
 
-        // 過去バンドID -> [この新バンドにいるメンバーID]
         const commonPastBands = {};
 
         membersInBand.forEach(mId => {
             const pasts = memberPastBands[mId] || [];
             pasts.forEach(p => {
                 if (!commonPastBands[p.id]) {
-                    commonPastBands[p.id] = { name: p.name, members: [] };
+                    commonPastBands[p.id] = {
+                        id: p.id,
+                        name: p.name,
+                        color: p.color,
+                        emoji: p.emoji,
+                        members: []
+                    };
                 }
                 commonPastBands[p.id].members.push(mId);
             });
         });
 
-        // 2人以上が同じ過去バンドにいた場合
         Object.values(commonPastBands).forEach(info => {
-            if (info.members.length >= 2) {
+            if (info.members.length >= state.minCollisionThreshold) {
                 if (!collisions[nBand.id]) {
                     collisions[nBand.id] = [];
                 }
-                collisions[nBand.id].push({
-                    sourceName: info.name,
-                    members: info.members
-                });
+                collisions[nBand.id].push(info);
             }
         });
     });
@@ -724,8 +788,6 @@ function handleDrop(e, bandId, part, isCurrentBand = false) {
     // メンバーがこのパートを担当できるか確認
     const member = state.members.find(m => m.id === memberId);
     if (!member || !member.skills[part]) {
-        // 通常はここで弾くが、D&D補助機能でそもそもドロップできなくしている場合もある
-        // alertはUXを損なうので出さなくてもいいが、念のため残すなら控えめに
         return;
     }
 
@@ -733,29 +795,56 @@ function handleDrop(e, bandId, part, isCurrentBand = false) {
     const band = bands.find(b => b.id === bandId);
 
     if (band) {
-        // アサイン処理
-        band.slots[part] = memberId;
-
-        // もしバンド間移動なら、元の場所から削除
         const sourceData = e.dataTransfer.getData('application/json');
+        let fromBandId = null;
+        let fromPart = null;
+
         if (sourceData) {
             try {
-                const { fromBandId, fromPart } = JSON.parse(sourceData);
-                // 同じ場所へのドロップでなければ削除処理を実行
-                if (fromBandId !== bandId || fromPart !== part) {
-                    // 現在のバンドかどうか判定して削除
-                    // ここでは簡易的にどちらのリストからも探して削除する
-                    // （同じIDのバンドが両方にあることはない前提）
-
-                    const fromBand = state.bands.find(b => b.id === fromBandId) ||
-                        state.currentBands.find(b => b.id === fromBandId);
-
-                    if (fromBand && fromBand.slots[fromPart] === memberId) {
-                        fromBand.slots[fromPart] = null;
-                    }
-                }
+                const parsed = JSON.parse(sourceData);
+                fromBandId = parsed.fromBandId;
+                fromPart = parsed.fromPart;
             } catch (err) {
                 console.error('Error parsing drag source data:', err);
+            }
+        }
+
+        // スワップ（入れ替え）ロジック
+        const targetMemberId = band.slots[part];
+        if (targetMemberId && fromBandId && fromPart) {
+            // 移動元のバンドを取得
+            const fromBand = state.bands.find(b => b.id === fromBandId) ||
+                state.currentBands.find(b => b.id === fromBandId);
+
+            if (fromBand) {
+                const targetMember = state.members.find(m => m.id === targetMemberId);
+                // 相手がこちらの元のパートを演奏できるかチェック
+                if (targetMember && targetMember.skills[fromPart]) {
+                    // 入れ替え実行
+                    fromBand.slots[fromPart] = targetMemberId;
+                    band.slots[part] = memberId;
+                    saveState();
+                    render();
+                    return;
+                } else {
+                    // スワップできない場合は通常のアサイン処理へ（上書きになる）
+                    // あるいは、交換不可であることを通知しても良いが、
+                    // ここでは「スキルがあれば交換、なければ上書き」という挙動にする
+                }
+            }
+        }
+
+        // 通常のアサイン/移動処理
+        band.slots[part] = memberId;
+
+        // 元の場所から削除（移動の場合）
+        if (fromBandId && fromPart) {
+            if (fromBandId !== bandId || fromPart !== part) {
+                const fromBand = state.bands.find(b => b.id === fromBandId) ||
+                    state.currentBands.find(b => b.id === fromBandId);
+                if (fromBand && fromBand.slots[fromPart] === memberId) {
+                    fromBand.slots[fromPart] = null;
+                }
             }
         }
 
@@ -847,12 +936,20 @@ function renderMemberPool({ duplicates }) {
     });
 
     container.innerHTML = filteredMembers.map(member => {
-        const duplicateReason = duplicates[member.id];
-        const isDuplicate = !!duplicateReason;
+        const isDuplicate = !!duplicates[member.id];
         const isAssigned = assignedMemberIds.has(member.id);
         const skillsDisplay = Object.entries(member.skills)
             .map(([part, level]) => `<span class="skill-tag">${part}:${level}</span>`)
             .join('');
+
+        // 継続バンド所属チェック（色表示用）
+        const memberInCurrentBands = state.currentBands.filter(cb =>
+            Object.values(cb.slots).includes(member.id)
+        );
+
+        const originDots = memberInCurrentBands.map(cb => `
+            <span class="origin-dot" style="--origin-color: ${cb.color}" title="${escapeHtml(cb.name)}"></span>
+        `).join('');
 
         return `
             <div id="pool-member-${member.id}" 
@@ -862,8 +959,10 @@ function renderMemberPool({ duplicates }) {
                  ondragstart="handleDragStart(event, '${member.id}')"
                  ondragend="handleDragEnd(event)">
                 <div class="member-info-row">
-                    <span class="member-name">${escapeHtml(member.name)}</span>
-                    ${isDuplicate ? `<span class="alert-icon duplicate-alert" title="${duplicateReason}">🔴</span>` : ''}
+                    <span class="member-origin-dots">
+                        ${originDots}
+                    </span>
+                    <span class="member-name">${formatMemberName(member.name)}</span>
                     ${isAssigned ? '<span class="status-badge">参戦中</span>' : ''}
                     ${!isAssigned && member.mainPart ? `<span class="member-main-part">${member.mainPart}</span>` : ''}
                 </div>
@@ -890,28 +989,23 @@ function renderBands({ duplicates, collisions }) {
         // 過去バンド被り情報
         const bandCollisions = collisions[band.id] || [];
         const collisionCount = bandCollisions.length;
-        const collisionTitle = bandCollisions.map(c => `${c.sourceName}: ${getMemberNames(c.members)}`).join('\n');
 
         const skillGap = calculateSkillGap(band);
 
         const slots = PARTS.map(part => {
             const memberId = band.slots[part];
             const member = memberId ? state.members.find(m => m.id === memberId) : null;
-            const duplicateReason = memberId ? duplicates[memberId] : null;
-            const isDuplicate = !!duplicateReason;
+
+            // この特定のパートでの重複情報を取得
+            const partDuplicates = memberId ? (duplicates[memberId] || []).filter(d => d.atPart === part) : [];
+            const isDuplicate = partDuplicates.length > 0;
+            const duplicateReason = isDuplicate ? partDuplicates[0].error : null;
 
             // 過去バンド被りのハイライト
-            let collisionClass = '';
-            let collisionReason = '';
-            bandCollisions.forEach((c, idx) => {
-                if (c.members.includes(memberId)) {
-                    collisionClass = `collision-group-${idx % 3}`;
-                    collisionReason = `${c.sourceName}で共演: ${getMemberNames(c.members)}`;
-                }
-            });
+            const memberCollisions = (collisions[band.id] || []).filter(c => c.members.includes(memberId));
+            const hasCollision = memberCollisions.length > 0;
 
             const skill = member && member.skills[part] ? member.skills[part] : null;
-
             let skillClass = '';
             if (skill) {
                 if (skill >= 4) skillClass = 'high';
@@ -919,9 +1013,46 @@ function renderBands({ duplicates, collisions }) {
             }
 
             if (member) {
-                // アサインメンバーもドラッグ可能に
+                // 1. 継続バンド所属チェック（色表示用）
+                const memberInCurrentBands = state.currentBands.filter(cb =>
+                    Object.values(cb.slots).includes(memberId)
+                );
+
+                const originDots = memberInCurrentBands.map(cb => `
+                    <span class="origin-dot" style="--origin-color: ${cb.color}" title="${escapeHtml(cb.name)}"></span>
+                `).join('');
+
+                // 2. 新規バンド間重複
+                const otherBandAssignments = partDuplicates.filter(d => d.otherBandId);
+                const internalDuplicates = partDuplicates.filter(d => !d.otherBandId).length > 0;
+
+                // スタイルの決定（優先順位: 重複 > 過去共演）
+                let conflictClass = 'has-conflict';
+                let conflictTypeClass = '';
+                let conflictColor = '';
+
+                if (otherBandAssignments.length > 0) {
+                    conflictTypeClass = 'conflict-new';
+                    conflictColor = otherBandAssignments[0].color || 'var(--danger)';
+                } else if (internalDuplicates) {
+                    conflictTypeClass = 'conflict-new';
+                    conflictColor = 'var(--danger)';
+                } else if (hasCollision) {
+                    conflictTypeClass = 'conflict-past';
+                    conflictColor = memberCollisions[0].color || 'var(--info)';
+                } else {
+                    conflictClass = '';
+                }
+
+                const styleVars = conflictColor ? `--conflict-color: ${conflictColor}; --conflict-glow: ${conflictColor}33;` : '';
+
+                // ミニバッジの生成
+                let badges = '';
+                if (otherBandAssignments.length > 0 || internalDuplicates) badges += `<span class="mini-badge">🔴</span>`;
+                if (hasCollision) badges += `<span class="mini-badge" title="${memberCollisions.map(c => c.name).join(', ')}で共演">🤝</span>`;
+
                 return `
-                    <div class="band-slot ${isDuplicate ? 'has-duplicate' : ''} ${collisionClass}">
+                    <div class="band-slot ${conflictClass} ${conflictTypeClass}" style="${styleVars}">
                         <span class="slot-part">${part}</span>
                         <div class="drop-zone has-member"
                              data-part="${part}"
@@ -931,9 +1062,13 @@ function renderBands({ duplicates, collisions }) {
                             <div class="assigned-member" 
                                  draggable="true" 
                                  ondragstart="handleDragStart(event, '${member.id}', '${band.id}', '${part}')">
-                                <span class="assigned-name">${escapeHtml(member.name)}</span>
-                                ${isDuplicate ? `<span class="alert-icon duplicate-alert" title="${duplicateReason}">🔴</span>` : ''}
-                                ${collisionReason ? `<span class="alert-icon collision-alert" title="${collisionReason}">⚡</span>` : ''}
+                                <span class="member-origin-dots">
+                                    ${originDots}
+                                </span>
+                                <span class="assigned-name">${formatMemberName(member.name)}</span>
+                                <div class="slot-badge-container">
+                                    ${badges}
+                                </div>
                                 <span class="assigned-skill ${skillClass}"><span style="font-size:0.7em">Lv</span>${skill}</span>
                             </div>
                             <button class="remove-btn" onclick="removeFromSlot('${band.id}', '${part}', false)">✕</button>
@@ -956,6 +1091,8 @@ function renderBands({ duplicates, collisions }) {
             }
         }).join('');
 
+        const collisionTitle = bandCollisions.map(c => `${c.name}: ${getMemberNames(c.members)}`).join('\n');
+
         return `
             <div class="band-card">
                 <div class="band-header">
@@ -963,9 +1100,9 @@ function renderBands({ duplicates, collisions }) {
                         Band ${index + 1}
                     </div>
                     <div class="band-badges">
-                        ${duplicateCount > 0 ? `<span class="badge badge-duplicate" title="新バンド間で重複あり">🔴</span>` : ''}
+                        ${duplicateCount > 0 ? `<span class="badge badge-duplicate" title="重複あり">🔴</span>` : ''}
                         ${skillGap >= 3 ? `<span class="badge badge-skill-gap" title="実力差: ${skillGap}">⚠</span>` : ''}
-                        ${collisionCount > 0 ? `<span class="badge badge-warning" title="${escapeHtml(collisionTitle)}">⚡</span>` : ''}
+                        ${collisionCount > 0 ? `<span class="badge badge-info" title="${escapeHtml(collisionTitle)}">🤝</span>` : ''}
                     </div>
                 </div>
                 <div class="band-members">
@@ -984,8 +1121,6 @@ function renderCurrentBands({ duplicates }) {
         const slots = PARTS.map(part => {
             const memberId = band.slots[part];
             const member = memberId ? state.members.find(m => m.id === memberId) : null;
-            // 現在のバンドは重複していても赤くしない（仕様変更）
-            // もし新バンドと重複していても、それは新バンド側で対処すべき
 
             if (member) {
                 return `
@@ -1019,9 +1154,29 @@ function renderCurrentBands({ duplicates }) {
             }
         }).join('');
 
+        const colorOptions = COLOR_PALETTE.map(c => `
+            <button class="color-swatch-btn ${band.color === c ? 'active' : ''}" 
+                    style="background-color: ${c}" 
+                    onclick="handleCurrentBandColorEmojiChange('${band.id}', 'color', '${c}')"
+                    title="${c}"></button>
+        `).join('');
+
         return `
-            <div class="band-card">
+            <div class="band-card current-band-card" style="border-top: 4px solid ${band.color || 'var(--primary)'}">
                 <div class="band-header">
+                    <div class="band-meta-edit">
+                        <input type="text" class="band-emoji-input" value="${escapeHtml(band.emoji || '🎸')}" 
+                            maxlength="2" title="絵文字" 
+                            onchange="handleCurrentBandColorEmojiChange('${band.id}', 'emoji', this.value)">
+                        
+                        <div class="color-popover-container">
+                            <div class="color-indicator" style="background-color: ${band.color || '#4e73df'}"
+                                 onclick="toggleColorPopover('${band.id}')" title="カラーを選択"></div>
+                            <div id="popover-${band.id}" class="color-popover">
+                                ${colorOptions}
+                            </div>
+                        </div>
+                    </div>
                     <input type="text" class="band-name-input" value="${escapeHtml(band.name)}" 
                         onchange="handleCurrentBandNameChange('${band.id}', this.value)">
                     <button class="btn-icon" onclick="removeCurrentBand('${band.id}')" title="削除">✕</button>
@@ -1032,6 +1187,35 @@ function renderCurrentBands({ duplicates }) {
             </div>
         `;
     }).join('');
+}
+
+// カラーパレットの表示切り替え
+function toggleColorPopover(bandId) {
+    const popover = document.getElementById(`popover-${bandId}`);
+    if (popover) {
+        const isShown = popover.classList.contains('show');
+        // 全てのポップオーバーを一旦閉じる
+        document.querySelectorAll('.color-popover').forEach(p => p.classList.remove('show'));
+        // クリックされたものだけトグル
+        if (!isShown) popover.classList.add('show');
+    }
+}
+
+// 画面クリックでポップオーバーを閉じる
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.color-popover-container')) {
+        document.querySelectorAll('.color-popover').forEach(p => p.classList.remove('show'));
+    }
+});
+
+/**
+ * メンバー名のフォーマット（カッコ内を小さく、エスケープ込み）
+ */
+function formatMemberName(name) {
+    if (!name) return '';
+    const escaped = escapeHtml(name);
+    // 全角・半角のカッコとその中身を <small> で囲む
+    return escaped.replace(/([\(（].*?[\)）])/g, '<small class="name-sub">$1</small>');
 }
 
 // メンバー名のリストを取得（デバッグ/チップ用）

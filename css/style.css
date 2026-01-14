@@ -4,19 +4,19 @@
 =========================================== */
 
 :root {
-    /* カラーパレット */
-    --bg-primary: #0f0f1a;
-    --bg-secondary: #1a1a2e;
-    --bg-card: rgba(30, 30, 50, 0.7);
-    --bg-glass: rgba(255, 255, 255, 0.05);
+    /* カラーパレット (Light Theme Default) */
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --bg-card: #ffffff;
+    --bg-glass: rgba(0, 0, 0, 0.03);
 
-    --text-primary: #ffffff;
-    --text-secondary: #a0a0b0;
-    --text-muted: #6a6a7a;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
 
-    --accent-primary: #6366f1;
-    --accent-secondary: #8b5cf6;
-    --accent-gradient: linear-gradient(135deg, #6366f1, #8b5cf6);
+    --accent-primary: #4f46e5;
+    --accent-secondary: #7c3aed;
+    --accent-gradient: linear-gradient(135deg, #4f46e5, #7c3aed);
 
     --success: #10b981;
     --warning: #f59e0b;
@@ -24,13 +24,13 @@
     --info: #3b82f6;
 
     /* シャドウ */
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
-    --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --shadow-glow: 0 0 15px rgba(79, 70, 229, 0.1);
 
     /* ボーダー */
-    --border-color: rgba(255, 255, 255, 0.1);
+    --border-color: #e2e8f0;
     --border-radius: 12px;
     --border-radius-lg: 20px;
 
@@ -38,60 +38,42 @@
     --transition-fast: 0.15s ease;
     --transition-normal: 0.3s ease;
 
-    /* コンポーネント用変数 (Dark Default) */
-    --bg-dropzone: rgba(0, 0, 0, 0.3);
-    --bg-dropzone-dragover: rgba(99, 102, 241, 0.15);
-    --bg-dropzone-has-member: rgba(99, 102, 241, 0.1);
+    /* コンポーネント用変数 */
+    --bg-dropzone: #f1f5f9;
+    --bg-dropzone-dragover: rgba(79, 70, 229, 0.1);
+    --bg-dropzone-has-member: rgba(79, 70, 229, 0.05);
 
-    --bg-skill-tag: rgba(255, 255, 255, 0.1);
-    --bg-skill-high: rgba(16, 185, 129, 0.2);
-    --bg-skill-low: rgba(239, 68, 68, 0.2);
+    --bg-skill-tag: #f1f5f9;
+    --bg-skill-high: rgba(16, 185, 129, 0.1);
+    --bg-skill-low: rgba(239, 68, 68, 0.1);
 
-    /* 新しいテーマ変数 (Dark Default) */
-    --bg-panel: rgba(0, 0, 0, 0.2);
-    --bg-input: rgba(0, 0, 0, 0.3);
-    --bg-section-header: rgba(0, 0, 0, 0.2);
-    --bg-slot: rgba(0, 0, 0, 0.2);
-    --bg-code: rgba(0, 0, 0, 0.3);
+    --bg-panel: #ffffff;
+    --bg-input: #ffffff;
+    --bg-section-header: #f8fafc;
+    --bg-slot: #ffffff;
+    --bg-code: #f1f5f9;
 }
 
-/* ライトテーマ */
-body.light-theme {
-    --bg-primary: #f3f4f6;
-    --bg-secondary: #ffffff;
-    --bg-card: rgba(255, 255, 255, 0.9);
-    --bg-glass: rgba(0, 0, 0, 0.05);
+/* ダークテーマ (Optional Override) */
+body.dark-theme {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-card: #1e293b;
+    --bg-glass: rgba(255, 255, 255, 0.05);
 
-    --text-primary: #111827;
-    --text-secondary: #4b5563;
-    --text-muted: #6b7280;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
 
-    --border-color: rgba(0, 0, 0, 0.1);
+    --border-color: #334155;
 
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    --shadow-glow: 0 0 15px rgba(99, 102, 241, 0.2);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
 
-    background-image:
-        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.1) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.1) 0px, transparent 50%);
-
-    /* コンポーネント用変数 (Light Override) */
-    --bg-dropzone: rgba(0, 0, 0, 0.05);
-    --bg-dropzone-dragover: rgba(99, 102, 241, 0.1);
-    --bg-dropzone-has-member: rgba(99, 102, 241, 0.05);
-
-    --bg-skill-tag: rgba(0, 0, 0, 0.05);
-    --bg-skill-high: rgba(16, 185, 129, 0.15);
-    --bg-skill-low: rgba(239, 68, 68, 0.15);
-
-    /* 新しいテーマ変数 (Light Override) */
-    --bg-panel: rgba(255, 255, 255, 0.6);
-    --bg-input: rgba(255, 255, 255, 0.8);
-    --bg-section-header: rgba(255, 255, 255, 0.5);
-    --bg-slot: rgba(255, 255, 255, 0.5);
-    --bg-code: rgba(0, 0, 0, 0.05);
+    --bg-dropzone: rgba(0, 0, 0, 0.2);
+    --bg-panel: rgba(30, 41, 59, 0.5);
+    --bg-input: rgba(0, 0, 0, 0.2);
 }
 
 /* リセット & ベース */
@@ -456,18 +438,18 @@ body {
 }
 
 .band-members {
-    padding: 15px;
+    padding: 12px;
 }
 
 .band-slot {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px;
-    margin-bottom: 8px;
+    gap: 8px;
+    padding: 8px;
+    margin-bottom: 6px;
     background: var(--bg-slot);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
-    border: 1px solid transparent;
     transition: all var(--transition-fast);
 }
 
@@ -799,15 +781,20 @@ body {
 .draggable-member .member-name {
     flex: 1;
     font-weight: 600;
-    font-size: 1rem;
-    /* フォントサイズアップ */
+    font-size: 0.95rem;
+    /* 少し縮小 */
     color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .draggable-member .member-main-part {
-    font-size: 0.75rem;
-    padding: 2px 10px;
+    font-size: 0.7rem;
+    padding: 1px 8px;
     border-radius: 12px;
+    background: var(--bg-glass);
+    color: var(--text-secondary);
 }
 
 .member-skills-row {
@@ -1191,4 +1178,246 @@ body.light-theme .drop-zone.allowed-main {
     .filter-tabs {
         justify-content: center;
     }
+}
+
+/* --- 新機能用スタイル --- */
+
+.band-meta-edit {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-right: 8px;
+}
+
+.band-emoji-input {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    font-size: 1.2rem;
+    text-align: center;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--card-bg);
+    cursor: text;
+}
+
+.band-color-input {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: none;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.band-color-input::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.band-color-input::-webkit-color-swatch {
+    border: 2px solid #fff;
+    border-radius: 50%;
+}
+
+/* ===========================================
+   新・重複表示システム (Accent Border & Glow)
+=========================================== */
+
+/* スロットの基本スタイル修正（装飾のベース） */
+.band-slot {
+    position: relative;
+    border-left: 4px solid transparent;
+    /* アクセント線用 */
+    transition: all var(--transition-normal);
+}
+
+/* 重複・被り発生時のスタイル */
+.band-slot.has-conflict {
+    background: rgba(255, 255, 255, 0.03);
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* 1. 既存バンドとの被り (⚡) */
+.band-slot.conflict-current {
+    /* 枠線全体に色を付けるのではなく、左端のアクセント線と光で表現 */
+    border-left-color: var(--conflict-color, var(--warning));
+    box-shadow: 0 0 15px var(--conflict-glow, rgba(245, 158, 11, 0.2));
+}
+
+/* 2. 新規バンド間での重複 (🔴) */
+.band-slot.conflict-new {
+    border-left-color: var(--conflict-color, var(--danger));
+    box-shadow: 0 0 15px var(--conflict-glow, rgba(239, 68, 68, 0.2));
+}
+
+/* 3. 過去バンド共演 (🤝) */
+.band-slot.conflict-past {
+    border-left-color: var(--conflict-color, var(--info));
+}
+
+/* バッジの再定義（アイコンのみ） */
+.slot-badge-container {
+    display: flex;
+    gap: 2px;
+    margin-left: auto;
+    padding-left: 6px;
+}
+
+.mini-badge {
+    font-size: 0.8rem;
+    /* アイコンを少し大きく */
+    padding: 0 4px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* メンバー名表示の最適化 */
+.assigned-member {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    /* Ellipsisを効かせるために必要 */
+    overflow: hidden;
+}
+
+.assigned-name {
+    flex: 1;
+    font-size: 0.85rem;
+    /* 全体的に少し小さく */
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 4px;
+}
+
+/* カッコ内のスタイル（さらに小さく） */
+.name-sub {
+    font-size: 0.7rem;
+    font-weight: 400;
+    opacity: 0.8;
+    margin-left: 2px;
+}
+
+/* 元いたバンド（継続バンド）の色を示すドット */
+.member-origin-dots {
+    display: inline-flex;
+    gap: 3px;
+    margin-right: 4px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.origin-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: var(--origin-color);
+    box-shadow: 0 0 4px var(--origin-color);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* スロットタイトルの調整（Lv表示など） */
+.assigned-skill {
+    font-size: 0.75rem;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.current-band-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.color-indicator {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.color-indicator:hover {
+    transform: scale(1.1);
+}
+
+.color-popover-container {
+    position: relative;
+    display: inline-block;
+}
+
+.color-popover {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-secondary);
+    padding: 8px;
+    border-radius: 8px;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-color);
+    display: none;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    z-index: 100;
+    margin-top: 8px;
+}
+
+.color-popover::after {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-bottom-color: white;
+}
+
+.color-popover.show {
+    display: grid;
+}
+
+.color-swatch-btn {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.1s;
+}
+
+.color-swatch-btn:hover {
+    transform: scale(1.2);
+}
+
+.color-swatch-btn.active {
+    box-shadow: 0 0 0 2px var(--accent-primary);
+}
+
+.band-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.band-name-input {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.assigned-member {
+    display: flex;
+    align-items: center;
+    width: 100%;
 }
