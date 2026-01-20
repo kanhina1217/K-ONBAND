@@ -1144,7 +1144,7 @@ function renderBands({ duplicates, collisions }) {
                              ondragover="handleDragOver(event)"
                              ondragleave="handleDragLeave(event)"
                              ondrop="handleDrop(event, '${band.id}', '${part}', false)">
-                            ドロップ
+                            ${Sync.isGuest ? '-' : 'ドロップ'}
                         </div>
                     </div>
                 `;
@@ -1192,9 +1192,9 @@ function renderCurrentBands({ duplicates }) {
                              ondragleave="handleDragLeave(event)"
                              ondrop="handleDrop(event, '${band.id}', '${part}', true)">
                             <div class="assigned-member">
-                                <span class="assigned-name">${escapeHtml(member.name)}</span>
+                                <span class="assigned-name">${formatMemberName(member.name)}</span>
                             </div>
-                            <button class="remove-btn" onclick="removeFromSlot('${band.id}', '${part}', true)">✕</button>
+                            ${Sync.isGuest ? '' : `<button class="remove-btn" onclick="removeFromSlot('${band.id}', '${part}', true)">✕</button>`}
                         </div>
                     </div>
                 `;
@@ -1207,7 +1207,7 @@ function renderCurrentBands({ duplicates }) {
                              ondragover="handleDragOver(event)"
                              ondragleave="handleDragLeave(event)"
                              ondrop="handleDrop(event, '${band.id}', '${part}', true)">
-                            ドロップ
+                            ${Sync.isGuest ? '-' : 'ドロップ'}
                         </div>
                     </div>
                 `;
@@ -1239,7 +1239,7 @@ function renderCurrentBands({ duplicates }) {
                     </div>
                     <input type="text" class="band-name-input" value="${escapeHtml(band.name)}" 
                         onchange="handleCurrentBandNameChange('${band.id}', this.value)">
-                    <button class="btn-icon" onclick="removeCurrentBand('${band.id}')" title="削除">✕</button>
+                    ${Sync.isGuest ? '' : `<button class="btn-icon" onclick="removeCurrentBand('${band.id}')" title="削除">✕</button>`}
                 </div>
                 <div class="band-members">
                     ${slots}
@@ -1274,7 +1274,13 @@ document.addEventListener('click', (e) => {
 function formatMemberName(name) {
     if (!name) return '';
     const escaped = escapeHtml(name);
-    // 全角・半角のカッコとその中身を <small> で囲む
+
+    // ゲストモードの場合はカッコとその中身を完全に削除
+    if (typeof Sync !== 'undefined' && Sync.isGuest) {
+        return escaped.replace(/([\(（].*?[\)）])/g, '').trim();
+    }
+
+    // 通常モードは既存通り <small> で表示
     return escaped.replace(/([\(（].*?[\)）])/g, '<small class="name-sub">$1</small>');
 }
 
