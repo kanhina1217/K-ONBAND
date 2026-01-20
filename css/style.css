@@ -110,7 +110,6 @@ body {
     align-items: center;
     padding: 20px 30px;
     background: var(--bg-glass);
-    backdrop-filter: blur(10px);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-lg);
     margin-bottom: 30px;
@@ -205,7 +204,6 @@ body {
 /* セクション */
 .section {
     background: var(--bg-glass);
-    backdrop-filter: blur(10px);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-lg);
     padding: 25px;
@@ -499,14 +497,7 @@ body {
     color: var(--danger);
 }
 
-/* 現在のバンドセクション */
-.current-bands-section .band-card {
-    border-color: rgba(245, 158, 11, 0.3);
-}
 
-.current-bands-section .band-header {
-    background: rgba(245, 158, 11, 0.1);
-}
 
 .band-name-input {
     background: transparent;
