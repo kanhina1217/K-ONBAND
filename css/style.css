@@ -1496,71 +1496,63 @@ body {
 
 .guest-mode .app-header {
     margin-bottom: 8px;
-    /* 余白削減 */
-    padding: 10px 15px;
-    /* 小型化 */
+    padding: 8px 15px;
 }
 
 .guest-mode .app-header h1 {
-    font-size: 1.1rem;
+    font-size: 0.95rem;
 }
 
 .guest-mode .main-content {
     padding-bottom: 70px;
 }
 
-/* メンバープール画面いっぱい */
 .guest-mode .member-pool-section {
     max-height: none;
-    height: calc(100vh - 150px);
+    height: calc(100vh - 140px);
     margin-bottom: 0;
 }
 
-/* ゲストモードでのカードデザイン調整 */
 .guest-mode .section {
-    padding: 15px;
-    /* 余白削減 */
-    margin-bottom: 15px;
+    padding: 12px;
+    margin-bottom: 12px;
 }
 
 .guest-mode .band-card {
-    border-radius: 12px;
-    margin-bottom: 15px;
+    border-radius: 10px;
+    margin-bottom: 12px;
 }
 
 .guest-mode .band-header {
-    padding: 10px 15px;
-    /* 余白削減 */
+    padding: 8px 12px;
 }
 
 .guest-mode .band-title {
-    font-size: 1rem;
-}
-
-.guest-mode .band-members {
-    padding: 8px 10px;
-    /* 余白削減 */
-}
-
-.guest-mode .band-slot {
-    padding: 6px 10px;
-    /* 余白削減 */
-    border-radius: 8px;
-    margin-bottom: 4px;
-}
-
-.guest-mode .slot-part {
-    font-size: 0.7rem;
-    min-width: 40px;
-}
-
-.guest-mode .assigned-name {
     font-size: 0.85rem;
 }
 
+.guest-mode .band-members {
+    padding: 6px 10px;
+}
+
+.guest-mode .band-slot {
+    padding: 5px 10px;
+    border-radius: 6px;
+    margin-bottom: 3px;
+}
+
+.guest-mode .slot-part {
+    font-size: 0.65rem;
+    min-width: 35px;
+}
+
+.guest-mode .assigned-name {
+    font-size: 0.78rem;
+}
+
 .guest-mode .drop-zone {
-    min-height: 28px;
-    font-size: 0.8rem;
+    min-height: 24px;
+    font-size: 0.75rem;
 }
 
 /* ゲストモードでのUI非表示設定 */
@@ -1599,23 +1591,29 @@ body {
     border: none !important;
     pointer-events: none;
     width: auto;
-    font-size: 1rem;
+    font-size: 0.85rem;
+}
+
+.guest-overlay {
+    position: fixed;
+    bottom: 12px;
+    right: 12px;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 15px;
+    z-index: 1000;
+    pointer-events: none;
+    font-size: 0.65rem;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    opacity: 0.7;
 }
 
 /* モバイル特化 */
 @media (max-width: 600px) {
-    .guest-tabs {
-        border-radius: 0;
-        margin: -10px -10px 10px -10px;
-        top: 0;
-        border-left: none;
-        border-right: none;
-    }
-
-    .guest-tab {
-        padding: 10px 2px;
-    }
-
     .guest-mode .member-pool-section {
         height: calc(100vh - 120px);
     }
