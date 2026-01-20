@@ -21,6 +21,22 @@ const Sync = {
         this.setupUI();
     },
 
+    updateStatus(message, type = 'info') {
+        const overlay = document.querySelector('.guest-overlay');
+        if (overlay) {
+            const statusSpan = overlay.querySelector('.sync-status') || document.createElement('span');
+            statusSpan.className = 'sync-status';
+            statusSpan.style.marginLeft = '8px';
+            statusSpan.style.fontSize = '0.7em';
+            statusSpan.style.opacity = '0.8';
+            statusSpan.textContent = `[${message}]`;
+            if (!overlay.querySelector('.sync-status')) {
+                overlay.appendChild(statusSpan);
+            }
+        }
+        console.log(`[Sync Status] ${message}`);
+    },
+
     setupUI() {
         document.getElementById('syncBtn').addEventListener('click', () => {
             document.getElementById('syncModal').classList.remove('hidden');
@@ -31,6 +47,9 @@ const Sync = {
         });
 
         document.getElementById('startHostBtn').addEventListener('click', () => {
+            if (window.location.protocol === 'file:') {
+                alert('警告: 現在ローカルファイル(file://)として開いています。別のデバイスと同期するには、GitHub Pagesにアップロードするか、ローカルサーバー(VSCode Live Server等)を使用してください。');
+            }
             this.startHost();
         });
 
@@ -42,6 +61,7 @@ const Sync = {
     startHost() {
         if (this.peer) return;
 
+        console.log('--- Starting Host Mode ---');
         this.peer = new Peer();
         this.isHost = true;
 
@@ -51,15 +71,21 @@ const Sync = {
         });
 
         this.peer.on('connection', (conn) => {
-            console.log('New connection:', conn.peer);
+            console.log('New connection from:', conn.peer);
             this.connections.push(conn);
 
             conn.on('open', () => {
-                console.log('Connection open, sending initial state in 100ms...');
-                // 接続直後だと送信に失敗する場合があるため、わずかに遅延させる
-                setTimeout(() => {
+                console.log('Connection with guest open. Sending state...');
+                // 接続直後はデータ送信が不安定な場合があるため、遅延を入れて複数回送る
+                setTimeout(() => this.broadcastState(), 200);
+                setTimeout(() => this.broadcastState(), 1000);
+            });
+
+            conn.on('data', (data) => {
+                if (data.type === 'REQUEST_STATE') {
+                    console.log('Guest requested state. Resending...');
                     this.broadcastState();
-                }, 100);
+                }
             });
 
             conn.on('close', () => {
@@ -68,8 +94,12 @@ const Sync = {
         });
 
         this.peer.on('error', (err) => {
-            console.error('Peer error:', err);
-            alert('通信エラーが発生しました: ' + err.type);
+            console.error('PeerJS Host Error:', err);
+            if (err.type === 'browser-incompatible') {
+                alert('お使いのブラウザは同期機能に対応していません。');
+            } else {
+                alert('同期サーバーとの接続エラー: ' + err.type);
+            }
             this.stopHost();
         });
     },
@@ -99,7 +129,8 @@ const Sync = {
         activeSyncSection.classList.remove('hidden');
         document.getElementById('syncBtn').classList.add('active');
 
-        const url = `${window.location.origin}${window.location.pathname}?join=${id}`;
+        const protocol = window.location.protocol === 'file:' ? 'http://[あなたのIP]' : window.location.origin;
+        const url = `${protocol}${window.location.pathname}?join=${id}`;
         syncUrl.href = url;
         syncUrl.textContent = url;
 
@@ -118,47 +149,60 @@ const Sync = {
         if (this.peer) return;
 
         console.log('--- Guest Mode Start ---');
-        console.log('Attempting to join host:', hostId);
+        this.updateStatus('接続中...');
         this.peer = new Peer();
         this.isGuest = true;
 
         this.peer.on('open', (id) => {
-            console.log('Guest Peer opened with ID:', id);
-            console.log('Connecting to host...');
-            this.conn = this.peer.connect(hostId);
+            console.log('Guest Peer opened. Connecting to host:', hostId);
+            this.conn = this.peer.connect(hostId, {
+                reliable: true
+            });
 
             this.conn.on('open', () => {
-                console.log('SUCCESS: Connected to host', hostId);
+                console.log('SUCCESS: Connected to host');
+                this.updateStatus('同期待ち...');
+
                 document.getElementById('guestSection').classList.remove('hidden');
                 document.getElementById('hostSection').classList.add('hidden');
-                document.getElementById('syncBtn').classList.add('hidden'); // ゲストは同期ボタンを隠す
+                document.getElementById('syncBtn').classList.add('hidden');
 
-                // ホストからのデータ受信
+                // 2秒待ってもデータが来ない場合はリクエストを送る
+                setTimeout(() => {
+                    if (window.state && window.state.members.length === 0) {
+                        console.log('No data received yet. Requesting from host...');
+                        this.updateStatus('再試行中...');
+                        this.conn.send({ type: 'REQUEST_STATE' });
+                    }
+                }, 2000);
+
                 this.conn.on('data', (data) => {
-                    console.log('Data received from host:', data.type);
-                    this.handleReceivedData(data);
+                    console.log('Data received:', data.type);
+                    if (data.type === 'STATE_UPDATE') {
+                        this.updateStatus('同期完了');
+                        // 3秒後にステータスを消す
+                        setTimeout(() => this.updateStatus(''), 3000);
+                        this.handleReceivedData(data);
+                    }
                 });
             });
 
             this.conn.on('close', () => {
-                console.warn('Connection closed by host');
                 alert('ホストとの接続が切断されました。');
-                window.location.href = window.location.pathname; // ゲストモード終了
+                window.location.href = window.location.pathname;
             });
         });
 
         this.peer.on('error', (err) => {
-            console.error('PeerJS Error (Guest):', err);
-            alert('接続に失敗しました。URLを確認してください。 エラー: ' + err.type);
+            console.error('PeerJS Guest Error:', err);
+            this.updateStatus('接続エラー', 'error');
+            alert('接続に失敗しました。');
             window.location.href = window.location.pathname;
         });
     },
 
     handleReceivedData(data) {
         if (data.type === 'STATE_UPDATE') {
-            console.log('State update received');
-
-            // アプリケーションの状態を更新
             if (typeof updateStateFromSync === 'function') {
                 updateStateFromSync(data.state);
             }
@@ -168,12 +212,8 @@ const Sync = {
     broadcastState() {
         if (!this.isHost || this.connections.length === 0) return;
 
-        // グローバルなstateを明示的に取得
-        const currentState = window.state || state;
-        if (!currentState) {
-            console.error('Cannot broadcast: state is not defined');
-            return;
-        }
+        const currentState = window.state || (typeof state !== 'undefined' ? state : null);
+        if (!currentState) return;
 
         const data = {
             type: 'STATE_UPDATE',
@@ -189,11 +229,7 @@ const Sync = {
             }
         };
 
-        console.log(`Broadcasting state to ${this.connections.length} clients:`, {
-            members: data.state.members.length,
-            bands: data.state.bands.length
-        });
-
+        console.log(`Broadcasting to ${this.connections.length} clients...`);
         this.connections.forEach(conn => {
             if (conn.open) {
                 conn.send(data);
