@@ -154,12 +154,23 @@ const Sync = {
         this.isGuest = true;
 
         this.peer.on('open', (id) => {
-            console.log('Guest Peer opened. Connecting to host:', hostId);
-            this.conn = this.peer.connect(hostId, {
-                reliable: true
-            });
+            console.log('Guest Peer opened. My ID:', id);
+            console.log('Attempting PeerJS connection to:', hostId);
+
+            // reliable: trueを削除
+            this.conn = this.peer.connect(hostId);
+
+            // 接続タイムアウト監視 (10秒)
+            const connTimeout = setTimeout(() => {
+                if (this.conn && !this.conn.open) {
+                    console.error('Connection timeout');
+                    this.updateStatus('接続タイムアウト', 'error');
+                    alert('接続がタイムアウトしました。ホストがアクティブか確認してください。');
+                }
+            }, 10000);
 
             this.conn.on('open', () => {
+                clearTimeout(connTimeout);
                 console.log('SUCCESS: Connected to host');
                 this.updateStatus('同期待ち...');
 
@@ -194,9 +205,13 @@ const Sync = {
         });
 
         this.peer.on('error', (err) => {
-            console.error('PeerJS Guest Error:', err);
-            this.updateStatus('接続エラー', 'error');
-            alert('接続に失敗しました。');
+            console.error('Guest Peer Error:', err);
+            this.updateStatus('Peerエラー', 'error');
+            if (err.type === 'peer-unavailable') {
+                alert('ホストが見つかりません。');
+            } else {
+                alert('接続エラー: ' + err.type);
+            }
             window.location.href = window.location.pathname;
         });
     },
