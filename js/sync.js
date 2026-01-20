@@ -55,8 +55,11 @@ const Sync = {
             this.connections.push(conn);
 
             conn.on('open', () => {
-                // 初回接続時に現在の状態を送信
-                this.broadcastState();
+                console.log('Connection open, sending initial state in 100ms...');
+                // 接続直後だと送信に失敗する場合があるため、わずかに遅延させる
+                setTimeout(() => {
+                    this.broadcastState();
+                }, 100);
             });
 
             conn.on('close', () => {
@@ -114,35 +117,39 @@ const Sync = {
     startGuest(hostId) {
         if (this.peer) return;
 
-        console.log('Starting guest mode to join:', hostId);
+        console.log('--- Guest Mode Start ---');
+        console.log('Attempting to join host:', hostId);
         this.peer = new Peer();
         this.isGuest = true;
 
-        this.peer.on('open', () => {
+        this.peer.on('open', (id) => {
+            console.log('Guest Peer opened with ID:', id);
+            console.log('Connecting to host...');
             this.conn = this.peer.connect(hostId);
 
             this.conn.on('open', () => {
-                console.log('Connected to host');
+                console.log('SUCCESS: Connected to host', hostId);
                 document.getElementById('guestSection').classList.remove('hidden');
                 document.getElementById('hostSection').classList.add('hidden');
                 document.getElementById('syncBtn').classList.add('hidden'); // ゲストは同期ボタンを隠す
 
                 // ホストからのデータ受信
                 this.conn.on('data', (data) => {
+                    console.log('Data received from host:', data.type);
                     this.handleReceivedData(data);
                 });
             });
 
             this.conn.on('close', () => {
-                console.log('Connection closed');
+                console.warn('Connection closed by host');
                 alert('ホストとの接続が切断されました。');
                 window.location.href = window.location.pathname; // ゲストモード終了
             });
         });
 
         this.peer.on('error', (err) => {
-            console.error('Peer error:', err);
-            alert('接続に失敗しました。URLを確認してください。');
+            console.error('PeerJS Error (Guest):', err);
+            alert('接続に失敗しました。URLを確認してください。 エラー: ' + err.type);
             window.location.href = window.location.pathname;
         });
     },
@@ -161,19 +168,31 @@ const Sync = {
     broadcastState() {
         if (!this.isHost || this.connections.length === 0) return;
 
+        // グローバルなstateを明示的に取得
+        const currentState = window.state || state;
+        if (!currentState) {
+            console.error('Cannot broadcast: state is not defined');
+            return;
+        }
+
         const data = {
             type: 'STATE_UPDATE',
             state: {
-                members: state.members,
-                bands: state.bands,
-                currentBands: state.currentBands,
-                bandCount: state.bandCount,
-                allowConcurrent: state.allowConcurrent,
-                concurrentMinLevel: state.concurrentMinLevel,
-                maxAssignments: state.maxAssignments,
-                minCollisionThreshold: state.minCollisionThreshold
+                members: currentState.members,
+                bands: currentState.bands,
+                currentBands: currentState.currentBands,
+                bandCount: currentState.bandCount,
+                allowConcurrent: currentState.allowConcurrent,
+                concurrentMinLevel: currentState.concurrentMinLevel,
+                maxAssignments: currentState.maxAssignments,
+                minCollisionThreshold: currentState.minCollisionThreshold
             }
         };
+
+        console.log(`Broadcasting state to ${this.connections.length} clients:`, {
+            members: data.state.members.length,
+            bands: data.state.bands.length
+        });
 
         this.connections.forEach(conn => {
             if (conn.open) {

@@ -15,7 +15,7 @@ const PART_NAMES = {
 };
 
 // アプリケーション状態
-let state = {
+var state = {
     members: [],
     bands: [],
     currentBands: [],
@@ -28,6 +28,7 @@ let state = {
     maxAssignments: 2, // 兼任上限
     minCollisionThreshold: 3 // 過去の共演表示の閾値 (3人以上)
 };
+window.state = state; // 明示的にグローバルに公開
 
 // 初期化
 document.addEventListener('DOMContentLoaded', () => {
@@ -586,24 +587,32 @@ function handleCurrentBandNameChange(bandId, name) {
 
 // 同期用の状態更新
 function updateStateFromSync(newState) {
-    state.members = newState.members;
-    state.bands = newState.bands;
-    state.currentBands = newState.currentBands;
-    state.bandCount = newState.bandCount;
-    state.allowConcurrent = newState.allowConcurrent;
-    state.concurrentMinLevel = newState.concurrentMinLevel;
-    state.maxAssignments = newState.maxAssignments;
-    state.minCollisionThreshold = newState.minCollisionThreshold;
+    if (!newState) {
+        console.error('Received empty state from sync');
+        return;
+    }
+    console.log('Applying state from sync:', newState);
+    state.members = newState.members || [];
+    state.bands = newState.bands || [];
+    state.currentBands = newState.currentBands || [];
+    state.bandCount = newState.bandCount || 3;
+    state.allowConcurrent = newState.allowConcurrent ?? true;
+    state.concurrentMinLevel = newState.concurrentMinLevel ?? 5;
+    state.maxAssignments = newState.maxAssignments ?? 2;
+    state.minCollisionThreshold = newState.minCollisionThreshold ?? 3;
 
     render();
 }
 
 // 状態を保存
 function saveState() {
-    // ゲストモードの場合は、ローカル保存しない（または読み取り専用）
-    // 変更操作ができないようにUIで制限するのが望ましい
-    if (Sync.isGuest) return;
+    // ゲストモードの場合は、ローカル保存しない
+    if (Sync.isGuest) {
+        console.log('Guest mode: skip local save');
+        return;
+    }
 
+    console.log('Saving state to local storage');
     Storage.saveMembers(state.members);
     Storage.saveBands(state.bands);
     Storage.saveCurrentBands(state.currentBands);
@@ -611,6 +620,7 @@ function saveState() {
 
     // 同期中ならブロードキャスト
     if (Sync.isHost) {
+        console.log('Host mode: broadcasting update');
         Sync.broadcastState();
     }
 }
