@@ -1457,9 +1457,9 @@ body.light-theme .drop-zone.allowed-main {
     border: 1px solid var(--border-color);
     border-radius: 12px;
     margin-bottom: 20px;
-    padding: 4px;
+    padding: 3px;
     position: sticky;
-    top: 10px;
+    top: 5px;
     z-index: 100;
     box-shadow: var(--shadow-md);
 }
@@ -1469,11 +1469,11 @@ body.light-theme .drop-zone.allowed-main {
     border: none;
     background: transparent;
     color: var(--text-secondary);
-    padding: 12px 10px;
-    font-size: 0.9rem;
+    padding: 10px 5px;
+    font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
-    border-radius: 8px;
+    border-radius: 9px;
     transition: all 0.2s ease;
 }
 
@@ -1484,17 +1484,25 @@ body.light-theme .drop-zone.allowed-main {
 }
 
 .guest-mode .app-header {
-    margin-bottom: 15px;
-    padding: 15px 20px;
+    margin-bottom: 12px;
+    padding: 12px 20px;
 }
 
 .guest-mode .app-header h1 {
-    font-size: 1.4rem;
+    font-size: 1.2rem;
 }
 
 .guest-mode .main-content {
     padding-bottom: 80px;
     /* オーバーレイ分 */
+}
+
+/* メンバープール画面いっぱい */
+.guest-mode .member-pool-section {
+    max-height: none;
+    height: calc(100vh - 180px);
+    /* タブとヘッダー分を引く */
+    margin-bottom: 0;
 }
 
 /* ゲストモードでのカードデザイン調整 */
@@ -1507,39 +1515,43 @@ body.light-theme .drop-zone.allowed-main {
 
 .guest-mode .band-header {
     background: var(--bg-secondary);
-    padding: 18px;
+    padding: 15px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .guest-mode .band-title {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
 }
 
 .guest-mode .band-members {
-    padding: 15px;
+    padding: 12px;
 }
 
 .guest-mode .band-slot {
-    padding: 10px 14px;
-    border-radius: 12px;
+    padding: 8px 12px;
+    border-radius: 10px;
     background: var(--bg-primary);
     border: 1px solid rgba(0, 0, 0, 0.03);
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .guest-mode .slot-part {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: var(--accent-primary);
     opacity: 0.8;
 }
 
 .guest-mode .assigned-name {
-    font-size: 1rem;
+    font-size: 0.9rem;
 }
 
 /* ゲストモードでのUI非表示設定 */
-.guest-mode .header-actions button:not(#themeToggleBtn) {
-    display: none;
+.guest-mode .members-section {
+    display: none !important;
+}
+
+.guest-mode .header-actions button {
+    display: none !important;
 }
 
 .guest-mode #addMemberBtn,
@@ -1573,15 +1585,15 @@ body.light-theme .drop-zone.allowed-main {
 @media (max-width: 600px) {
     .guest-tabs {
         border-radius: 0;
-        margin: -20px -20px 20px -20px;
+        margin: -15px -20px 15px -20px;
         top: 0;
         border-left: none;
         border-right: none;
     }
 
     .guest-tab {
-        padding: 15px 5px;
-        font-size: 0.85rem;
+        padding: 12px 2px;
+        font-size: 0.8rem;
     }
 
     .guest-overlay {
@@ -1590,14 +1602,21 @@ body.light-theme .drop-zone.allowed-main {
         padding: 8px 15px;
         font-size: 0.8rem;
     }
+
+    .guest-mode .member-pool-section {
+        height: calc(100vh - 140px);
+    }
 }
 
-/* ダークテーマ時のゲストモード調整 */
-body.dark-theme .guest-mode .band-card {
-    background: var(--bg-secondary);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-
-body.dark-theme .guest-mode .band-slot {
-    background: rgba(255, 255, 255, 0.03);
+/* ダークテーマ無効化（ライトテーマに統一） */
+body.dark-theme {
+    /* ライトテーマの変数を強制再適用 */
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --bg-card: #ffffff;
+    --bg-glass: rgba(0, 0, 0, 0.03);
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border-color: #e2e8f0;
 }

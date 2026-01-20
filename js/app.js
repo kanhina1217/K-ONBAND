@@ -31,13 +31,9 @@ let state = {
 
 // 初期化
 document.addEventListener('DOMContentLoaded', () => {
-    // テーマ初期化
-    const savedTheme = localStorage.getItem('konband_theme');
-    if (savedTheme === 'light') {
-        document.body.classList.add('light-theme');
-        const themeBtn = document.getElementById('themeToggleBtn');
-        if (themeBtn) themeBtn.textContent = '🌙';
-    }
+    // ライトテーマ固定
+    document.body.classList.remove('dark-theme');
+    document.body.classList.add('light-theme');
 
     loadState();
     setupEventListeners();
@@ -256,15 +252,10 @@ function setupEventListeners() {
     }
 
 
-    // テーマ切り替え
+    // テーマ切り替え（削除済みUIへの参照回避）
     const themeBtn = document.getElementById('themeToggleBtn');
     if (themeBtn) {
-        themeBtn.addEventListener('click', () => {
-            document.body.classList.toggle('light-theme');
-            const isLight = document.body.classList.contains('light-theme');
-            themeBtn.textContent = isLight ? '🌙' : '☀️';
-            localStorage.setItem('konband_theme', isLight ? 'light' : 'dark');
-        });
+        themeBtn.style.display = 'none';
     }
 }
 
