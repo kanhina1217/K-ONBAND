@@ -765,19 +765,16 @@ body {
 .member-info-row {
     display: flex;
     align-items: center;
-    gap: 8px;
+    flex-wrap: wrap;
+    gap: 6px;
     width: 100%;
 }
 
 .draggable-member .member-name {
-    flex: 1;
     font-weight: 600;
     font-size: 0.95rem;
-    /* 少し縮小 */
     color: var(--text-primary);
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .draggable-member .member-main-part {
@@ -788,10 +785,11 @@ body {
     color: var(--text-secondary);
 }
 
-.member-skills-row {
+.member-skills-inline {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
+    gap: 3px;
+    align-items: center;
 }
 
 .skill-tag {
@@ -1517,7 +1515,7 @@ body {
     /* 名前をさらに小さく */
 }
 
-.guest-mode .member-skills-row {
+.guest-mode .member-skills-inline {
     gap: 2px;
 }
 
