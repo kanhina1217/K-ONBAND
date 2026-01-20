@@ -1026,8 +1026,10 @@ function renderMemberPool({ duplicates }) {
                     <div class="member-skills-inline">
                         ${skillsDisplay}
                     </div>
-                    ${isAssigned ? '<span class="status-badge">参戦中</span>' : ''}
-                    ${!isAssigned && member.mainPart ? `<span class="member-main-part">${member.mainPart}</span>` : ''}
+                    <div class="member-right-info">
+                        ${isAssigned ? '<span class="status-badge">参戦中</span>' : ''}
+                        ${!isAssigned && member.mainPart ? `<span class="member-main-part">${member.mainPart}</span>` : ''}
+                    </div>
                 </div>
                 <button class="btn btn-secondary edit-btn" onclick="event.stopPropagation(); openMemberModal('${member.id}')">✎</button>
             </div>

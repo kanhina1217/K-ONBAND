@@ -792,6 +792,13 @@ body {
     align-items: center;
 }
 
+.member-right-info {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
 .skill-tag {
     font-size: 0.75rem;
     color: var(--text-secondary);
