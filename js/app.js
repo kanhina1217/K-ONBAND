@@ -45,7 +45,42 @@ document.addEventListener('DOMContentLoaded', () => {
     // ゲストモードのUI反映
     if (Sync.isGuest) {
         document.body.classList.add('guest-mode');
-        // ゲスト表示用のフローティングラベルを表示
+        document.getElementById('guestTabs').classList.remove('hidden');
+
+        // タブ切り替えイベント
+        document.querySelectorAll('.guest-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const target = tab.dataset.tab;
+                document.querySelectorAll('.guest-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                // 表示切り替え
+                const leftSection = document.querySelector('.band-editor-left');
+                const rightSection = document.querySelector('.band-editor-right');
+                const newBandsSec = document.querySelector('.bands-section');
+                const currBandsSec = document.querySelector('.current-bands-section');
+
+                if (target === 'new-bands') {
+                    leftSection.style.display = 'block';
+                    rightSection.style.display = 'none';
+                    newBandsSec.style.display = 'block';
+                    currBandsSec.style.display = 'none';
+                } else if (target === 'current-bands') {
+                    leftSection.style.display = 'block';
+                    rightSection.style.display = 'none';
+                    newBandsSec.style.display = 'none';
+                    currBandsSec.style.display = 'block';
+                } else if (target === 'members') {
+                    leftSection.style.display = 'none';
+                    rightSection.style.display = 'block';
+                }
+            });
+        });
+
+        // 初期表示設定
+        document.querySelector('.band-editor-right').style.display = 'none';
+        document.querySelector('.current-bands-section').style.display = 'none';
+
         const overlay = document.createElement('div');
         overlay.className = 'guest-overlay';
         overlay.innerHTML = '<span>📡 閲覧モード</span>';

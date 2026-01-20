@@ -1422,14 +1422,14 @@ body.light-theme .drop-zone.allowed-main {
     width: 100%;
 }
 
-/* 同期関連 */
+/* 同期関連 (ホスト用) */
 #qrcodeContainer img {
     display: block;
     margin: 0 auto;
 }
 
 #syncBtn.active {
-    background-color: var(--accent);
+    background-color: var(--accent-primary);
     color: white;
 }
 
@@ -1437,7 +1437,7 @@ body.light-theme .drop-zone.allowed-main {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    background: var(--accent);
+    background: var(--accent-primary);
     color: white;
     padding: 10px 20px;
     border-radius: 30px;
@@ -1450,14 +1450,108 @@ body.light-theme .drop-zone.allowed-main {
     gap: 8px;
 }
 
+/* 同期・ゲストモード刷新 */
+.guest-tabs {
+    display: flex;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    padding: 4px;
+    position: sticky;
+    top: 10px;
+    z-index: 100;
+    box-shadow: var(--shadow-md);
+}
+
+.guest-tab {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    padding: 12px 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.guest-tab.active {
+    background: var(--accent-gradient);
+    color: white;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+}
+
+.guest-mode .app-header {
+    margin-bottom: 15px;
+    padding: 15px 20px;
+}
+
+.guest-mode .app-header h1 {
+    font-size: 1.4rem;
+}
+
+.guest-mode .main-content {
+    padding-bottom: 80px;
+    /* オーバーレイ分 */
+}
+
+/* ゲストモードでのカードデザイン調整 */
+.guest-mode .band-card {
+    border-radius: 16px;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    margin-bottom: 20px;
+}
+
+.guest-mode .band-header {
+    background: var(--bg-secondary);
+    padding: 18px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.guest-mode .band-title {
+    font-size: 1.2rem;
+}
+
+.guest-mode .band-members {
+    padding: 15px;
+}
+
+.guest-mode .band-slot {
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: var(--bg-primary);
+    border: 1px solid rgba(0, 0, 0, 0.03);
+    margin-bottom: 8px;
+}
+
+.guest-mode .slot-part {
+    font-size: 0.8rem;
+    color: var(--accent-primary);
+    opacity: 0.8;
+}
+
+.guest-mode .assigned-name {
+    font-size: 1rem;
+}
+
+/* ゲストモードでのUI非表示設定 */
 .guest-mode .header-actions button:not(#themeToggleBtn) {
     display: none;
 }
 
-.guest-mode .btn-icon,
-.guest-mode .btn-accent,
-.guest-mode .btn-primary,
-.guest-mode .band-controls button {
+.guest-mode #addMemberBtn,
+.guest-mode .spreadsheet-import,
+.guest-mode #addCurrentBandBtn,
+.guest-mode .band-controls,
+.guest-mode .remove-btn,
+.guest-mode .edit-btn,
+.guest-mode #settingsBtn,
+.guest-mode .band-meta-edit,
+.guest-mode .badge-duplicate,
+.guest-mode .badge-skill-gap {
     display: none !important;
 }
 
@@ -1467,4 +1561,43 @@ body.light-theme .drop-zone.allowed-main {
 
 .guest-mode .drop-zone {
     pointer-events: none;
+}
+
+.guest-mode .band-name-input {
+    border: none !important;
+    pointer-events: none;
+    width: auto;
+}
+
+/* モバイル特化 */
+@media (max-width: 600px) {
+    .guest-tabs {
+        border-radius: 0;
+        margin: -20px -20px 20px -20px;
+        top: 0;
+        border-left: none;
+        border-right: none;
+    }
+
+    .guest-tab {
+        padding: 15px 5px;
+        font-size: 0.85rem;
+    }
+
+    .guest-overlay {
+        bottom: 10px;
+        right: 10px;
+        padding: 8px 15px;
+        font-size: 0.8rem;
+    }
+}
+
+/* ダークテーマ時のゲストモード調整 */
+body.dark-theme .guest-mode .band-card {
+    background: var(--bg-secondary);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-theme .guest-mode .band-slot {
+    background: rgba(255, 255, 255, 0.03);
 }
