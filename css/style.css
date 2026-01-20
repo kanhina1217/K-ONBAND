@@ -1504,6 +1504,30 @@ body {
     margin-bottom: 0;
 }
 
+.guest-mode .draggable-member {
+    padding: 6px 10px;
+    /* 縦幅を大幅に圧縮 */
+    gap: 2px;
+    /* 行間を詰め */
+    margin-bottom: 3px;
+}
+
+.guest-mode .draggable-member .member-name {
+    font-size: 0.85rem;
+    /* 名前をさらに小さく */
+}
+
+.guest-mode .member-skills-row {
+    gap: 2px;
+}
+
+.guest-mode .skill-tag {
+    font-size: 0.65rem;
+    /* タグも小さく */
+    padding: 1px 4px;
+}
+
+
 .guest-mode .section {
     padding: 12px;
     margin-bottom: 12px;
