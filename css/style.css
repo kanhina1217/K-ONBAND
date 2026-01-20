@@ -775,6 +775,8 @@ body {
     font-size: 0.95rem;
     color: var(--text-primary);
     white-space: nowrap;
+    margin-bottom: 0;
+    /* 不要なマージンを消去 */
 }
 
 .draggable-member .member-main-part {
@@ -783,6 +785,8 @@ body {
     border-radius: 12px;
     background: var(--bg-glass);
     color: var(--text-secondary);
+    margin-bottom: 0;
+    /* 不要なマージンを消去 */
 }
 
 .member-skills-inline {
