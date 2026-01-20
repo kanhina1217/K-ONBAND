@@ -1421,3 +1421,50 @@ body.light-theme .drop-zone.allowed-main {
     align-items: center;
     width: 100%;
 }
+
+/* 同期関連 */
+#qrcodeContainer img {
+    display: block;
+    margin: 0 auto;
+}
+
+#syncBtn.active {
+    background-color: var(--accent);
+    color: white;
+}
+
+.guest-overlay {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--accent);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 30px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    pointer-events: none;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.guest-mode .header-actions button:not(#themeToggleBtn) {
+    display: none;
+}
+
+.guest-mode .btn-icon,
+.guest-mode .btn-accent,
+.guest-mode .btn-primary,
+.guest-mode .band-controls button {
+    display: none !important;
+}
+
+.guest-mode .member-card {
+    cursor: default !important;
+}
+
+.guest-mode .drop-zone {
+    pointer-events: none;
+}

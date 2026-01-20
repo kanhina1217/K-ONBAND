@@ -41,6 +41,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loadState();
     setupEventListeners();
+
+    // ゲストモードのUI反映
+    if (Sync.isGuest) {
+        document.body.classList.add('guest-mode');
+        // ゲスト表示用のフローティングラベルを表示
+        const overlay = document.createElement('div');
+        overlay.className = 'guest-overlay';
+        overlay.innerHTML = '<span>📡 閲覧モード</span>';
+        document.body.appendChild(overlay);
+    }
+
     render();
 });
 
@@ -547,12 +558,35 @@ function handleCurrentBandNameChange(bandId, name) {
     }
 }
 
+// 同期用の状態更新
+function updateStateFromSync(newState) {
+    state.members = newState.members;
+    state.bands = newState.bands;
+    state.currentBands = newState.currentBands;
+    state.bandCount = newState.bandCount;
+    state.allowConcurrent = newState.allowConcurrent;
+    state.concurrentMinLevel = newState.concurrentMinLevel;
+    state.maxAssignments = newState.maxAssignments;
+    state.minCollisionThreshold = newState.minCollisionThreshold;
+
+    render();
+}
+
 // 状態を保存
 function saveState() {
+    // ゲストモードの場合は、ローカル保存しない（または読み取り専用）
+    // 変更操作ができないようにUIで制限するのが望ましい
+    if (Sync.isGuest) return;
+
     Storage.saveMembers(state.members);
     Storage.saveBands(state.bands);
     Storage.saveCurrentBands(state.currentBands);
     Storage.saveBandCount(state.bandCount);
+
+    // 同期中ならブロードキャスト
+    if (Sync.isHost) {
+        Sync.broadcastState();
+    }
 }
 
 // 重複と過去バンド被りを検出

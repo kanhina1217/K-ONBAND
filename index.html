@@ -21,6 +21,7 @@
                 <button id="exportBtn" class="btn btn-secondary">📤 エクスポート</button>
                 <button id="importBtn" class="btn btn-secondary">📥 インポート</button>
                 <button id="themeToggleBtn" class="btn btn-secondary" title="テーマ切り替え">☀️</button>
+                <button id="syncBtn" class="btn btn-secondary">🔄 同期</button>
                 <button id="resetAllBtn" class="btn btn-danger" style="background-color: var(--danger);">🗑️
                     全削除</button>
                 <input type="file" id="importFile" accept=".json" hidden>
@@ -216,7 +217,42 @@
         </div>
     </div>
 
+    <!-- 同期モーダル -->
+    <div id="syncModal" class="modal hidden">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div class="modal-header">
+                <h3>🔄 リアルタイム同期</h3>
+                <button id="closeSyncModal" class="btn-icon">✕</button>
+            </div>
+            <div id="hostSection">
+                <p>このPCをホストにして、他の端末に共有します。</p>
+                <button id="startHostBtn" class="btn btn-primary">ホストを開始する</button>
+            </div>
+            <div id="activeSyncSection" class="hidden">
+                <p>同期中...</p>
+                <div id="qrcodeContainer"
+                    style="margin: 20px auto; background: white; padding: 10px; width: fit-content; border-radius: 8px;">
+                </div>
+                <p style="font-size: 0.8em; color: var(--text-secondary); word-break: break-all;">
+                    <a id="syncUrl" href="#" target="_blank" style="color: var(--accent);"></a>
+                </p>
+                <button id="stopHostBtn" class="btn btn-danger" style="margin-top: 20px;">同期を停止</button>
+            </div>
+            <div id="guestSection" class="hidden">
+                <div
+                    style="padding: 20px; background: rgba(var(--accent-rgb), 0.1); border-radius: 8px; margin-top: 10px;">
+                    <p>📡 ゲストモードで接続中</p>
+                    <p style="font-size: 0.9em;">ホストの画面をリアルタイムで表示しています。変更はホスト側にのみ保存されます。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ライブラリ -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="js/storage.js"></script>
+    <script src="js/sync.js"></script>
     <script src="js/app.js"></script>
 </body>
 
